@@ -7,10 +7,13 @@ import reactor.core.publisher.Sinks;
 @Service
 public class ImageBridge {
 	
-	private final Sinks.Many<String> sink = Sinks.many().multicast().onBackpressureBuffer();
+	private final Sinks.Many<String> sink = Sinks.many().multicast().onBackpressureBuffer(256, false);
 
     public void publish(String prompt) {
-        sink.tryEmitNext(prompt);
+        Sinks.EmitResult result = sink.tryEmitNext(prompt);
+        if (result.isFailure()) {
+            System.err.println("ImageBridge emit failed: " + result);
+        }
     }
 
     public Sinks.Many<String> getSink() {
